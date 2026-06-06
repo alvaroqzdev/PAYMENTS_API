@@ -1,0 +1,63 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+    url = env("DATABASE_URL")
+}
+
+model User {
+    id String @id @default(uuid())
+
+    name String 
+    email String @unique
+    created_at DateTime @default(now())
+    phone String 
+    password String 
+    cpf String @unique
+
+    wallet Wallet?
+
+    received_transaction Transaction[] @relation("UserReceiver")
+    sender_transaction Transaction[] @relation("UserSender")
+
+    @@map("Users")
+}
+
+model Wallet {
+    id String @id @default(uuid())
+
+    balance Decimal 
+    created_at DateTime @default(now())
+    
+    user_id String @unique
+   
+    user_wallet User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@map("Wallet")
+}
+
+model Transaction {
+    id String @id @default(uuid())
+
+    user_sent String 
+    user_received String 
+    payment Decimal 
+    status Status
+    created_at DateTime @default(now())
+
+    
+    sender User @relation("UserSender", fields: [user_sent], references: [id], onDelete: Cascade)
+    
+    receiver User @relation("UserReceiver",fields: [user_received], references: [id], onDelete: Cascade)
+
+
+    @@map("Transaction")
+}
+
+enum Status {
+    ENVIADO
+    CANCELADO 
+    PENDENTE
+}

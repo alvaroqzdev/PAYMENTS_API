@@ -5,7 +5,11 @@ const envSchema = z.object({
     DATABASE_URL: z.string(),
     DB_ROOT_PASSWORD: z.string(),
     DB_NAME: z.string(),
-    API_PORT: z.string()
+    API_PORT: z.string(),
+    JWT_SECRET:z.string(),
+    JWT_REFRESH_SECRET:z.string(),
+    JWT_EXPIRES: z.string(),
+    JWT_REFRESH_EXPIRES: z.string()
 })
 
 const results = envSchema.safeParse(process.env)
@@ -24,5 +28,9 @@ module.exports = {
     dbUrl: env.DATABASE_URL,
     dbRootPassWord: env.DB_ROOT_PASSWORD,
     dbName: env.DB_NAME,
-    apiPort: env.API_PORT
+    apiPort: env.API_PORT,
+    jwtSecret: env.JWT_SECRET,
+    jwtRefreshSecret: env.JWT_REFRESH_SECRET,
+    jwtExpires: env.JWT_EXPIRES,
+    jwtRefreshExpires: env.JWT_REFRESH_EXPIRES
 }

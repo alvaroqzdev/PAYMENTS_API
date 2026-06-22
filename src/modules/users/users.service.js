@@ -22,6 +22,7 @@ const selectUserByEmail = async (userEmail) => {
     return prisma.user.findUnique({
         where: { email: userEmail },
         select: {
+            id: true,
             name: true,
             email: true,
             phone: true,

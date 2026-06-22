@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const usersRoutes = require ('./modules/users/users.routes.js')
+const loginRoutes = require ('./modules/auth/auth.routes.js')
 
 const app = express();
 
@@ -16,5 +17,6 @@ app.use(express.urlencoded({ extended: true }));
 
 //ROUTES ==================================
 app.use('/api/v1', usersRoutes)
+app.use('/api/v1', loginRoutes)
 
 module.exports = app;

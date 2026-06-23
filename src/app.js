@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const usersRoutes = require ('./modules/users/users.routes.js')
-const loginRoutes = require ('./modules/auth/auth.routes.js')
+const usersRoutes = require('./modules/users/users.routes.js')
+const loginRoutes = require('./modules/auth/auth.routes.js')
+const { globalLimiter } = require('./middlewares/rateLimit.middleware.js')
 
 const app = express();
 
@@ -14,7 +15,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
+app.use(globalLimiter)
 //ROUTES ==================================
 app.use('/api/v1', usersRoutes)
 app.use('/api/v1', loginRoutes)

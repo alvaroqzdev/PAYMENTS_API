@@ -9,14 +9,11 @@ const globalLimiter = rateLimit({
         error: "Too much requests. Try again in some minutes",
         code: 'RATE_LIMIT_EXCEEDED'
     },
-    skipFailedRequests: false,
-    keyGenerator: (req) => {
-        return req.ip || req.headers['x-forwarded-for']?.split(',')[0];
-    }
+    skipFailedRequests: false
 });
 
 const loginLimiter = rateLimit({
-    windowMS: 15 * 60 * 1000,
+    windowMs: 15 * 60 * 1000,
     max: 5,
     standardHeaders: true,
     message: {

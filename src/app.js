@@ -3,6 +3,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const usersRoutes = require('./modules/users/users.routes.js')
 const loginRoutes = require('./modules/auth/auth.routes.js')
+const walletRoutes = require('./modules/wallets/wallets.routes.js')
 const { globalLimiter } = require('./middlewares/rateLimit.middleware.js')
 
 const app = express();
@@ -19,5 +20,6 @@ app.use(globalLimiter)
 //ROUTES ==================================
 app.use('/api/v1', usersRoutes)
 app.use('/api/v1', loginRoutes)
+app.use('/api/v1', walletRoutes)
 
 module.exports = app;

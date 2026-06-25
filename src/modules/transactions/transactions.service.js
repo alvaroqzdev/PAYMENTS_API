@@ -51,4 +51,13 @@ const transactionStatus = async (transactionId, status) => {
     })
 }
 
-module.exports = { transaction, transactionStatus }
+const getTransactions = async (userId, page, limit) => {
+    return prisma.transaction.findMany({
+        where: { OR: [{ user_sent: userId }, { user_received: userId }] },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { created_at: "desc" }
+    })
+}
+
+module.exports = { transaction, transactionStatus, getTransactions }

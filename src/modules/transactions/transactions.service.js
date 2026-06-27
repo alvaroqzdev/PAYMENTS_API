@@ -1,6 +1,9 @@
 const prisma = require('../../config/database.js')
+const { transactionWebHook } = require('../webhooks/webhooks.service.js')
 
 const transaction = async (senderId, recipientId, amount) => {
+
+
 
     const sender = await prisma.wallet.findFirstOrThrow({
         where: { user_id: senderId }
@@ -37,7 +40,11 @@ const transaction = async (senderId, recipientId, amount) => {
         }),
 
     ])
-
+    await transactionWebHook({
+        sender: senderId,
+        receiver: recipientId,
+        status: "ENVIADO"
+    })
     return { debitCount, creditCount }
 }
 

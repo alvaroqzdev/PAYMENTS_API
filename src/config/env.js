@@ -9,7 +9,8 @@ const envSchema = z.object({
     JWT_SECRET:z.string(),
     JWT_REFRESH_SECRET:z.string(),
     JWT_EXPIRES: z.string(),
-    JWT_REFRESH_EXPIRES: z.string()
+    JWT_REFRESH_EXPIRES: z.string(),
+    WEBHOOK_URL: z.string()
 })
 
 const results = envSchema.safeParse(process.env)
@@ -32,5 +33,6 @@ module.exports = {
     jwtSecret: env.JWT_SECRET,
     jwtRefreshSecret: env.JWT_REFRESH_SECRET,
     jwtExpires: env.JWT_EXPIRES,
-    jwtRefreshExpires: env.JWT_REFRESH_EXPIRES
+    jwtRefreshExpires: env.JWT_REFRESH_EXPIRES,
+    webHookUrl: env.WEBHOOK_URL
 }

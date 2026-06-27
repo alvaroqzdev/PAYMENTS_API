@@ -1,9 +1,14 @@
 const prisma = require('../../config/database.js')
 const { transactionWebHook } = require('../webhooks/webhooks.service.js')
+const logger = require('../../utils/logger.js')
 
 const transaction = async (senderId, recipientId, amount) => {
 
-
+    logger.info('Init transaction', {
+        senderId: senderId,
+        recipientId: recipientId,
+        amount: amount
+    });
 
     const sender = await prisma.wallet.findFirstOrThrow({
         where: { user_id: senderId }
@@ -14,6 +19,11 @@ const transaction = async (senderId, recipientId, amount) => {
     })
 
     if (sender.balance < amount) {
+        logger.warn('Insuficient Balance', {
+            senderId: senderId,
+            recipientId: recipientId,
+            amount: amount
+        });
         throw new Error('Insuficient balance')
     }
 
@@ -40,6 +50,13 @@ const transaction = async (senderId, recipientId, amount) => {
         }),
 
     ])
+
+    logger.info('Transaction Successful', {
+        sender: senderId,
+        receiver: recipientId,
+        status: "ENVIADO"
+    })
+
     await transactionWebHook({
         sender: senderId,
         receiver: recipientId,

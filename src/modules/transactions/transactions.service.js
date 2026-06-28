@@ -27,42 +27,69 @@ const transaction = async (senderId, recipientId, amount) => {
         throw new Error('Insuficient balance')
     }
 
-    const [debitCount, creditCount] = await prisma.$transaction([
+    try {
+        const [debitCount, creditCount] = await prisma.$transaction([
 
-        prisma.wallet.update({
-            where: { user_id: senderId },
-            data: { balance: { decrement: amount } }
-        }),
+             prisma.wallet.update({
+                where: { user_id: senderId },
+                data: { balance: { decrement: amount } }
+            }),
 
-        prisma.wallet.update({
-            where: { user_id: recipientId },
-            data: { balance: { increment: amount } }
-        }),
+             prisma.wallet.update({
+                where: { user_id: recipientId },
+                data: { balance: { increment: amount } }
+            }),
 
-        prisma.transaction.create({
+             prisma.transaction.create({
+                data: {
+                    user_sent: senderId,
+                    user_received: recipientId,
+                    payment: amount,
+                    status: 'ENVIADO'
+                }
+
+            }),
+
+        ])
+
+        logger.info('Transaction Successful', {
+            sender: senderId,
+            receiver: recipientId,
+            status: "ENVIADO"
+        })
+
+        await transactionWebHook({
+            sender: senderId,
+            receiver: recipientId,
+            status: "ENVIADO"
+        })
+        return { debitCount, creditCount }
+    } catch (error) {
+        await prisma.transaction.create({
             data: {
                 user_sent: senderId,
                 user_received: recipientId,
                 payment: amount,
-                status: 'ENVIADO'
+                status: 'CANCELADO'
             }
 
         }),
 
-    ])
+            logger.warn('failed transaction', {
+                senderId: senderId,
+                recipientId: recipientId,
+                amount: amount
+            });
 
-    logger.info('Transaction Successful', {
-        sender: senderId,
-        receiver: recipientId,
-        status: "ENVIADO"
-    })
+        await transactionWebHook({
+            sender: senderId,
+            receiver: recipientId,
+            status: "CANCELADO"
+        })
 
-    await transactionWebHook({
-        sender: senderId,
-        receiver: recipientId,
-        status: "ENVIADO"
-    })
-    return { debitCount, creditCount }
+        throw error
+    } 
+
 }
 
 const transactionStatus = async (transactionId, status) => {

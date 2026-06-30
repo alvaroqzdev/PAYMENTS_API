@@ -1,6 +1,6 @@
 const prisma = require('../../config/database.js')
 const { transactionWebHook } = require('../webhooks/webhooks.service.js')
-const logger = require('../../utils/logger.js')
+const logger = require('../../utils/logger.js');
 
 const transaction = async (senderId, recipientId, amount) => {
 
@@ -10,61 +10,7 @@ const transaction = async (senderId, recipientId, amount) => {
         amount: amount
     });
 
-    const sender = await prisma.wallet.findFirstOrThrow({
-        where: { user_id: senderId }
-    })
-
-    const recipient = await prisma.wallet.findFirstOrThrow({
-        where: { user_id: recipientId }
-    })
-
-    if (sender.balance < amount) {
-        logger.warn('Insuficient Balance', {
-            senderId: senderId,
-            recipientId: recipientId,
-            amount: amount
-        });
-        throw new Error('Insuficient balance')
-    }
-
-    try {
-        const [debitCount, creditCount] = await prisma.$transaction([
-
-             prisma.wallet.update({
-                where: { user_id: senderId },
-                data: { balance: { decrement: amount } }
-            }),
-
-             prisma.wallet.update({
-                where: { user_id: recipientId },
-                data: { balance: { increment: amount } }
-            }),
-
-             prisma.transaction.create({
-                data: {
-                    user_sent: senderId,
-                    user_received: recipientId,
-                    payment: amount,
-                    status: 'ENVIADO'
-                }
-
-            }),
-
-        ])
-
-        logger.info('Transaction Successful', {
-            sender: senderId,
-            receiver: recipientId,
-            status: "ENVIADO"
-        })
-
-        await transactionWebHook({
-            sender: senderId,
-            receiver: recipientId,
-            status: "ENVIADO"
-        })
-        return { debitCount, creditCount }
-    } catch (error) {
+    if (senderId === recipientId) {
         await prisma.transaction.create({
             data: {
                 user_sent: senderId,
@@ -73,22 +19,153 @@ const transaction = async (senderId, recipientId, amount) => {
                 status: 'CANCELADO'
             }
 
-        }),
+        })
 
-            logger.warn('failed transaction', {
-                senderId: senderId,
-                recipientId: recipientId,
-                amount: amount
-            });
-
-        await transactionWebHook({
+        logger.warn("SenderId and recipientId are equals: ", {
             sender: senderId,
             receiver: recipientId,
             status: "CANCELADO"
         })
 
+        try {
+            await transactionWebHook({
+                sender: senderId,
+                receiver: recipientId,
+                status: "CANCELADO"
+            })
+        } catch (error) {
+            logger.warn("WebHook Error: ", {
+                sender: senderId,
+                receiver: recipientId,
+                status: "CANCELADO",
+                error: error.message
+            })
+        }
+
+        throw new Error("SenderId and recipientId are equals")
+    }
+
+
+    try {
+
+        const result = await prisma.$transaction(async (tx) => {
+
+            const sender = await tx.wallet.findUnique({
+                where: { user_id: senderId },
+                select: { balance: true, user_id: true }
+            })
+
+            const recipient = await tx.wallet.findUnique({
+                where: { user_id: recipientId },
+                select: { balance: true, user_id: true }
+            })
+
+            if (!sender || !recipient) {
+
+                logger.warn("User Not Found: ", {
+                    sender: senderId,
+                    receiver: recipientId,
+                    status: "CANCELADO"
+                })
+
+                throw new Error("User Not Found")
+            }
+
+            if (sender.balance < amount) {
+
+                logger.warn("Insuficient Balance: ", {
+                    sender: senderId,
+                    receiver: recipientId,
+                    status: "CANCELADO"
+                })
+
+                throw new Error("Insuficient Balance")
+            }
+
+            const debitCount = await tx.wallet.updateMany({
+                where: { user_id: senderId, balance: { gte: amount } },
+                data: { balance: { decrement: amount } }
+            })
+
+            const creditCount = await tx.wallet.updateMany({
+                where: { user_id: recipientId },
+                data: { balance: { increment: amount } }
+            })
+
+            const createTransactionTableData = await tx.transaction.create({
+                data: {
+                    user_sent: senderId,
+                    user_received: recipientId,
+                    payment: amount,
+                    status: 'ENVIADO'
+                }
+
+            })
+
+            return { debitCount, creditCount, createTransactionTableData }
+        })
+
+        logger.info('Transaction Successful', {
+            sender: senderId,
+            receiver: recipientId,
+            status: "ENVIADO"
+        })
+
+        try {
+            await transactionWebHook({
+                sender: senderId,
+                receiver: recipientId,
+                status: "ENVIADO"
+            })
+        }
+        catch (error) {
+
+            logger.warn({
+                sender: senderId,
+                receiver: recipientId,
+                status: "ENVIADO",
+                error: error.message
+            })
+        }
+
+        return result
+
+    } catch (error) {
+
+        if (error.message === 'Insuficient Balance') {
+
+            await prisma.transaction.create({
+                data: {
+                    user_sent: senderId,
+                    user_received: recipientId,
+                    payment: amount,
+                    status: 'CANCELADO'
+                }
+
+            })
+        }
+
+        if (error.message !== 'Insuficient Balance' && error.message !== 'User Not Found') {
+            await prisma.transaction.create({
+                data: {
+                    user_sent: senderId,
+                    user_received: recipientId,
+                    payment: amount,
+                    status: 'CANCELADO'
+                }
+
+            })
+
+            logger.warn('Failed Transaction', {
+                senderId: senderId,
+                recipientId: recipientId,
+                amount: amount
+            })
+
+            await transactionWebHook({ status: "CANCELADO" })
+        }
         throw error
-    } 
+    }
 
 }
 

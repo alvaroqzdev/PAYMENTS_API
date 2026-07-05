@@ -1,4 +1,28 @@
 services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minha-api
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    environment:
+      NODE_ENV: development
+      PORT: ${API_PORT}
+      
+      DATABASE_URL: mysql://root:${DB_ROOT_PASSWORD}@db:3306/${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES: ${JWT_EXPIRES}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES: ${JWT_REFRESH_EXPIRES}
+      WEBHOOK_URL: ${WEBHOOK_URL}
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    depends_on:
+      - db
+    restart: unless-stopped
   db:
     image: mysql:8
     restart: always

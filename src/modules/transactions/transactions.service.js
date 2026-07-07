@@ -1,6 +1,8 @@
 const prisma = require('../../config/database.js')
 const { transactionWebHook } = require('../webhooks/webhooks.service.js')
 const logger = require('../../utils/logger.js');
+const AppError = require('../../utils/AppError.js')
+
 
 const transaction = async (senderId, recipientId, amount) => {
 
@@ -42,7 +44,7 @@ const transaction = async (senderId, recipientId, amount) => {
             })
         }
 
-        throw new Error("SenderId and recipientId are equals")
+        throw new AppError("SenderId and recipientId are equals", 400)
     }
 
 
@@ -68,7 +70,7 @@ const transaction = async (senderId, recipientId, amount) => {
                     status: "CANCELADO"
                 })
 
-                throw new Error("User Not Found")
+                throw new AppError("User Not Found", 404)
             }
 
             if (sender.balance < amount) {
@@ -79,7 +81,7 @@ const transaction = async (senderId, recipientId, amount) => {
                     status: "CANCELADO"
                 })
 
-                throw new Error("Insuficient Balance")
+                throw new AppError("Insuficient Balance", 400)
             }
 
             const debitCount = await tx.wallet.updateMany({

@@ -62,7 +62,7 @@ describe('login()', () => {
             .post('/api/v1/login')
             .send({ password: password, email: email });
 
-        expect(res.status).toBe(403);
+        expect(res.status).toBe(401);
 
     })
 
@@ -77,7 +77,7 @@ describe('login()', () => {
             .post('/api/v1/login')
             .send({ password: password, email: email });
 
-        expect(res.status).toBe(403);
+        expect(res.status).toBe(401);
 
     })
 

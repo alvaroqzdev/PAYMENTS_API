@@ -52,7 +52,7 @@ describe('login()', () => {
         selectUserByEmail.mockResolvedValue({ id: 'abc', email, password: 'hashedPassword' })
         compareHash.mockResolvedValue(false)
 
-        await expect(login(email, password)).rejects.toThrow('Email or Passwsrd Incorrect')
+        await expect(login(email, password)).rejects.toThrow('Email or Password Incorrect')
     })
 
     it('deve retornar um email inválido', async () => {
@@ -61,7 +61,7 @@ describe('login()', () => {
         const password = "12345678"
 
         selectUserByEmail.mockResolvedValue(null)
-        await expect(login(email, password)).rejects.toThrow('Email or Passwsrd Incorrect')
+        await expect(login(email, password)).rejects.toThrow('Email or Password Incorrect')
     })
 
 })

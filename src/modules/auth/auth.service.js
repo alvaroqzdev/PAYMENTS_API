@@ -2,6 +2,7 @@ const { acessTokenGeneration, refreshTokenGeneration } = require('../../utils/to
 const { compareHash } = require('../../utils/hash.js')
 const { selectUserByEmail } = require('../users/users.service.js')
 const logger = require('../../utils/logger.js')
+const AppError = require('../../utils/AppError.js')
 
 
 const login = async (email, password) => {
@@ -13,16 +14,16 @@ const login = async (email, password) => {
 
     const emailTable = tableData?.email
     if (!emailTable) {
-        logger.warn("Email or Passwsrd Incorrect", { email: email})
-        throw new Error('Email or Passwsrd Incorrect')
+        logger.warn("Email or Passwsrd Incorrect", { email: email })
+        throw new AppError('Email or Password Incorrect', 401)
     }
 
     const passwordTable = tableData.password
     const correctPassword = await compareHash(password, passwordTable)
     if (!correctPassword) {
-        logger.warn("Email or Passwsrd Incorrect", { email: email })
+        logger.warn("Email or Passsword Incorrect", { email: email })
 
-        throw new Error('Email or Passwsrd Incorrect')
+        throw new AppError('Email or Password Incorrect', 401)
     }
 
     const payload = {
@@ -34,7 +35,7 @@ const login = async (email, password) => {
     const refreshToken = await refreshTokenGeneration(tableData.id)
 
     logger.info("Final Login", {
-       email: email
+        email: email
     })
 
     return { acessToken, refreshToken }

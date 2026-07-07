@@ -1,6 +1,6 @@
 const login = require('./auth.service.js')
 
-const userLogin = async (req, res) => {
+const userLogin = async (req, res, next) => {
     try {
         const newLogin = await login(req.body.email, req.body.password)
 
@@ -8,7 +8,7 @@ const userLogin = async (req, res) => {
 
     } catch (error) {
 
-        return res.status(403).json({ error: 'Login Failed' })
+        next(error)
     }
 }
 

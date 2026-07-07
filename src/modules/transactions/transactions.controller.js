@@ -1,18 +1,17 @@
 const { transaction, transactionStatus, getTransactions } = require('./transactions.service')
 
-const transactionController = async (req, res) => {
+const transactionController = async (req, res, next) => {
     try {
         const walletTransaction = await transaction(req.user.id, req.body.recipient, req.body.amount)
 
         res.status(200).json(walletTransaction)
 
     } catch (error) {
-        res.status(400).json({ error: 'Transaction Failed' })
-        console.error(error.message)
+        next(error)
     }
 }
 
-const transactionStatusController = async (req, res) => {
+const transactionStatusController = async (req, res, next) => {
     try {
 
         const walletStatus = await transactionStatus(req.body.id, req.body.status)
@@ -20,11 +19,12 @@ const transactionStatusController = async (req, res) => {
         res.status(200).json(walletStatus)
 
     } catch (error) {
-        res.status(404).json({ error: 'Transaction Failed' })
+
+        next(error)
     }
 }
 
-const getTransactionsController = async (req, res) => {
+const getTransactionsController = async (req, res, next) => {
     try {
 
         const walletTransactions = await getTransactions(req.user.id, Number(req.query.page), Number(req.query.limit))
@@ -32,8 +32,7 @@ const getTransactionsController = async (req, res) => {
         res.status(200).json(walletTransactions)
 
     } catch (error) {
-        res.status(404).json({ error: 'Transaction Failed' })
-        console.error(error.message)
+        next(error)
 
     }
 }

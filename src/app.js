@@ -7,6 +7,7 @@ const walletRoutes = require('./modules/wallets/wallets.routes.js')
 const transactionsRoutes = require('./modules/transactions/transactions.routes.js')
 
 const { globalLimiter } = require('./middlewares/rateLimit.middleware.js')
+const errorHandler = require('./middlewares/error.middleware.js')
 
 const app = express();
 
@@ -25,4 +26,5 @@ app.use('/api/v1', transactionsRoutes)
 app.use('/api/v1', loginRoutes)
 app.use('/api/v1', walletRoutes)
 
+app.use(errorHandler)
 module.exports = app;

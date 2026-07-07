@@ -1,6 +1,6 @@
 const { selectUserByEmail, createUser } = require('./users.service.js');
 
-const createNewUser = async (req, res) => {
+const createNewUser = async (req, res, next) => {
 
     try {
         const newUser = await createUser(req.body)
@@ -9,11 +9,11 @@ const createNewUser = async (req, res) => {
 
     } catch (error) {
 
-        return res.status(500).json({ error: error.message })
+        next(error)
     }
 }
 
-const selectUser = async (req, res) => {
+const selectUser = async (req, res, next) => {
 
     try {
         const user = await selectUserByEmail(req.params.email)
@@ -22,7 +22,7 @@ const selectUser = async (req, res) => {
 
     } catch (error) {
 
-        return res.status(404).json({ error: 'user not found' })
+        next(error)
     }
 }
 

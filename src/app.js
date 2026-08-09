@@ -12,7 +12,7 @@ const errorHandler = require('./middlewares/error.middleware.js')
 const app = express();
 
 app.use(helmet());
-
+// comentario aleatorio 
 app.use(cors({
     origin: "http://localhost:3000",
     credentials: true

@@ -13,7 +13,7 @@ const authenticate = async (req, res, next) => {
         return res.status(401).json({ error: 'Format is incorrect. Use: Bearer' })
     }
 
-    const result = await acessTokenVerification(token)
+    const result = acessTokenVerification(token)
 
     if (!result.validate) {
         if (result.error === "TokenExpiredError") {
